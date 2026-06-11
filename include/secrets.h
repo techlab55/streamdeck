@@ -1,0 +1,5 @@
+#define WIFI_SSID "H3140-63774554"
+#define WIFI_PASSWORD "fRy3XsPTyf"
+
+#define OBS_IP   "192.168.2.11"
+#define OBS_PORT 4455
