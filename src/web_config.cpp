@@ -30,6 +30,7 @@ displayUpdate(
     "CONFIG WIFI",
     false,
     false,
+    false,
     false);
     
 }
@@ -71,12 +72,89 @@ String makePage()
     String html;
 
     html += "<html><head>";
+    html += "<meta charset='UTF-8'>";
     html += "<meta name='viewport' content='width=device-width'>";
     html += "<title>ESP32 StreamDeck</title>";
+    html += R"rawliteral(
+<style>
+body{
+    background:#1e1e1e;
+    color:#e0e0e0;
+    font-family:Arial,sans-serif;
+    margin:15px;
+}
+
+h2,h3{
+    color:#4fc3f7;
+}
+
+.card{
+    background:#2b2b2b;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 0 8px rgba(0,0,0,0.4);
+}
+
+input,select{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    margin-bottom:10px;
+    background:#333;
+    color:white;
+    border:1px solid #555;
+    border-radius:6px;
+    box-sizing:border-box;
+}
+
+input[type=submit],
+input[type=button],
+button{
+    background:#1976d2;
+    color:white;
+    border:none;
+    border-radius:6px;
+    padding:12px;
+    margin-top:5px;
+    cursor:pointer;
+}
+
+input[type=submit]:hover,
+input[type=button]:hover,
+button:hover{
+    background:#2196f3;
+}
+
+.status{
+    background:#1b5e20;
+    color:white;
+    padding:10px;
+    border-radius:8px;
+    text-align:center;
+    margin-bottom:15px;
+}
+
+hr{
+    border:0;
+    height:1px;
+    background:#555;
+}
+</style>
+)rawliteral";
     html += "</head><body>";
 
-    html += "<h2>ESP32 OBS StreamDeck</h2>";
-
+    //html += "<h2>ESP32 OBS StreamDeck</h2>";
+html += "<div class='status'>";
+html += "<b>ESP32 OBS StreamDeck</b><br>";
+html += "Firmware ";
+html += FW_VERSION_STRING;
+html += "<br>";
+html += "IP ESP: ";
+html += WiFi.localIP().toString();
+html += "</div>";
+html += "<div class='card'>";
+html += "<h3>📶 WiFi</h3>";
     html += "<form action='/save' method='post'>";
   
     html += "SSID:<br>";
@@ -102,9 +180,37 @@ function togglePass()
 }
 </script>
 )rawliteral";
-
+html += "</div>";
+html += "<div class='card'>";
+html += "<h3>🎥 OBS</h3>";
     html += "OBS IP:<br>";
     html += "<input name='obsip' value='" + config.obsIP + "'>";
+    html += "<input type='button' value='Salva solo OBS IP'onclick='saveObsIp()'>";
+
+    html += R"rawliteral(
+    <script>
+async function saveObsIp()
+{
+    let obsip =
+        document.querySelector(
+            "input[name='obsip']"
+        ).value;
+
+    await fetch('/saveobsip', {
+        method: 'POST',
+        headers: {
+            'Content-Type':
+                'application/x-www-form-urlencoded'
+        },
+        body: 'obsip=' +
+              encodeURIComponent(obsip)
+    });
+
+    alert('OBS IP salvato');
+}
+</script>
+
+)rawliteral";
 html += "       Versione: " + String(FW_VERSION_STRING) + "<br><br>";
     html += "OBS Port:<br>";
     html += "<input name='obsport' value='" + String(config.obsPort) + "'>";
@@ -112,6 +218,9 @@ html += "       Versione: " + String(FW_VERSION_STRING) + "<br><br>";
 html += "<br><br>";
     html += "Audio Input:<br>";
     html += "<input name='audio' value='" + config.audioInput + "'><br><br>";
+  html += "</div>";
+html += "<div class='card'>";
+html += "<h3>🎬 Scene</h3>";
     html += "Scena 1:<br>";
 html += makeSceneSelect("scene1", config.scene1);
 html += "<br><br>";
@@ -135,9 +244,11 @@ html += "<br><br>";
 html += "Scena 6:<br>";
 html += makeSceneSelect("scene6", config.scene6);
 html += "<br><br>";
+html += "</div>";
 html += "<hr>";
-
-html += "<h3>Modalita Sources</h3>";
+html += "<div class='card'>";
+html += "<h3>🎛 Modalità Sources</h3>";
+//html += "<h3>Modalita Sources</h3>";
 html += "Scena:<br>";
 
 
@@ -183,7 +294,10 @@ html += "Tasto 6:<br>";
 html += "<select name='sourceKey6' id='sourceKey6'></select>";
 html += "<input type='hidden' id='saved6' value='" + config.sourceKey6 + "'>";
 html += "<br><br>";
-  html += "<input type='submit' value='SALVA'>";
+html += "<br>";
+html += "<input type='submit' value='💾 SALVA CONFIGURAZIONE'>";
+html += "</div>";
+  //html += "<input type='submit' value='SALVA'>";
     html += "</form>";
 html += R"rawliteral(
 <script>
@@ -330,6 +444,18 @@ server.on("/defaults", HTTP_GET, []()
     delay(1000);
     ESP.restart();
 });
+server.on("/saveobsip",
+          HTTP_POST,
+          []()
+{
+    saveObsIPOnly(
+        server.arg("obsip"));
+
+    server.send(
+        200,
+        "text/plain",
+        "OK");
+});
     server.on("/", handleRoot);
 
     server.on("/save",
@@ -338,6 +464,46 @@ server.on("/defaults", HTTP_GET, []()
 
     server.on("/sources",
               handleSources);
+         server.on("/scenes", HTTP_GET, []()
+{
+    String json = "[";
+
+    for(int i=0; i<obsSceneCount; i++)
+    {
+        if(i) json += ",";
+
+        json += "\"";
+        json += obsScenes[i];
+        json += "\"";
+    }
+
+    json += "]";
+
+    server.send(200, "application/json", json);
+});
+
+server.on("/config", HTTP_GET, []()
+{
+    String json = "{";
+    
+    json += "\"obsip\":\"" + config.obsIP + "\",";
+    json += "\"scene1\":\"" + config.scene1 + "\",";
+    json += "\"scene2\":\"" + config.scene2 + "\",";
+    json += "\"scene3\":\"" + config.scene3 + "\",";
+    json += "\"scene4\":\"" + config.scene4 + "\",";
+    json += "\"scene5\":\"" + config.scene5 + "\",";
+    json += "\"scene6\":\"" + config.scene6 + "\",";
+
+    json += "\"sourceKey2\":\"" + config.sourceKey2 + "\",";
+    json += "\"sourceKey3\":\"" + config.sourceKey3 + "\",";
+    json += "\"sourceKey4\":\"" + config.sourceKey4 + "\",";
+    json += "\"sourceKey5\":\"" + config.sourceKey5 + "\",";
+    json += "\"sourceKey6\":\"" + config.sourceKey6 + "\"";
+
+    json += "}";
+
+    server.send(200, "application/json", json);
+});
 
     server.onNotFound([]()
     {

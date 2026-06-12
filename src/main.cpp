@@ -41,6 +41,7 @@ obsLoop();
     getCurrentScene(),
     isRecording(),
     isRecordPaused(),
-    isObsConnected());
+    isObsConnected(),
+    isSourceMode());
     }
 }
