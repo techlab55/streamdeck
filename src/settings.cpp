@@ -11,7 +11,7 @@ void loadDefaults()
 {
     config.wifiSSID = WIFI_SSID;
     config.wifiPass = WIFI_PASSWORD;
-    config.obsIP = OBS_IP;
+   // config.obsIP = OBS_IP;
    
     config.sourceScene = SOURCE_SCENE;
     config.obsPort = 4455;
@@ -30,7 +30,21 @@ void loadDefaults()
     config.sourceKey5 = SOURCE_KEY5;
     config.sourceKey6 = SOURCE_KEY6;
 }
+void saveObsIPOnly(const String& ip)
+{
+    prefs.begin("streamdeck", false);
 
+    prefs.putString("obsip", ip);
+
+    prefs.end();
+
+    config.obsIP = ip;
+
+    Serial.print("OBS IP salvato: ");
+    Serial.println(ip);
+     delay(500);
+    ESP.restart();
+}
 void saveSettings()
 {
     delay(1000);
@@ -92,7 +106,8 @@ void loadSettings()
 
     config.wifiPass =
         prefs.getString("pass", "");
-
+bool firstBoot =
+        !prefs.isKey("obsip");
     config.obsIP =
         prefs.getString("obsip", "");
 
@@ -143,6 +158,16 @@ void loadSettings()
         prefs.getString("sourceScene", "");
 
     prefs.end();
-    
+     if(firstBoot)
+    {
+        Serial.println("PRIMO AVVIO");
+
+        loadDefaults();
+
+        // solo qui prendi il valore da secrets.h
+        config.obsIP = OBS_IP;
+
+        saveSettings();
+    }
 
 }

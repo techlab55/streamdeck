@@ -34,3 +34,4 @@ extern AppConfig config;
 void loadSettings();
 void saveSettings();
 void loadDefaults();
+void saveObsIPOnly(const String& ip);

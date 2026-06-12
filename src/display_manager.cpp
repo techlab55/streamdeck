@@ -40,7 +40,8 @@ void displayUpdate(
     const char* scene,
     bool rec,
     bool pause,
-    bool obs)
+    bool obs,
+    bool sourceMode)
 {
     display.clearDisplay();
 
@@ -48,8 +49,12 @@ void displayUpdate(
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0,0);
 
-    display.print("OBS:");
-    display.println(obs ? "OK" : "OFF");
+   display.print("OBS:");
+display.print(obs ? "OK" : "OFF");
+
+display.print("  ");
+
+display.println(sourceMode ? "SRC" : "SCN");
 
     display.println();
 
