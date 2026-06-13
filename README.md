@@ -3,4 +3,4 @@
 3- prossimamente aggiungerò anche gli stl
 compilate e buon uso qui ho aggiunto anche lo schema, se trovate qualche bug, e ve ne sono segnalatemelo
 video:https://youtu.be/Y0zFz0PQtGw
-<i mg width="583" height="425" alt="Senza titolo" src="https://github.com/user-attachments/assets/beffd509-aff2-444c-8b56-115c1e272181" />
+<img width="583" height="425" alt="immagine" src="https://github.com/user-attachments/assets/760b0ba4-9f72-4243-b7ea-b255ba45ec18" />
