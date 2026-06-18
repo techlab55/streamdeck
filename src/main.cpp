@@ -6,6 +6,8 @@
 #include "obs_client.h"
 #include "matrix.h"
 #include "version.h"
+#include <WiFi.h>
+unsigned long showIpUntil = 0;
 void setup()
 {
    Serial.begin(115200);
@@ -25,6 +27,19 @@ delay(1000);
 }
 void loop()
 {
+    if(millis() < showIpUntil)
+{
+   // displayShowIP(WiFi.localIP().toString());
+}
+else
+{
+    displayUpdate(
+        getCurrentScene(),
+        isRecording(),
+        isRecordPaused(),
+        isObsConnected(),
+        isSourceMode());
+}
    webConfigLoop(); 
     matrixUpdate();
 obsLoop();
