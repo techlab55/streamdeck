@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include "settings.h"
 #include "web_config.h"
+#include "display_manager.h"
 void loadDefaults();
 static String sourceToToggle = "";
 
@@ -370,6 +371,7 @@ if(requestId == "sourcelist")
     }
 }
 }
+
 void obsBegin()
 {
      Serial.print("Connessione a: ");
@@ -391,7 +393,11 @@ WiFi.begin(
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\n[OK] WiFi connesso con successo!");
     Serial.print("Indirizzo IP: ");
-    Serial.println(WiFi.localIP());
+    //Serial.println(WiFi.localIP());
+    displayShowIP(
+    WiFi.localIP().toString().c_str());
+
+delay(2000);
   } else {
     Serial.println("\n[ERRORE] WiFi non disponibile");
 
