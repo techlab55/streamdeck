@@ -1,9 +1,10 @@
 #pragma once
 
 void displayBegin();
-
+void displayShowIP(const char* ip);
 void displayUpdate(
     const char* scene,
     bool rec,
-    bool live,
-    bool obsConnected);
+    bool pause,
+    bool obs,
+    bool sourceMode);

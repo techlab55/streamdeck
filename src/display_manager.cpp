@@ -35,12 +35,7 @@ void displayBegin()
 
     Serial.println("OLED OK");
 }
-
-void displayUpdate(
-    const char* scene,
-    bool rec,
-    bool pause,
-    bool obs)
+void displayShowIP(const char* ip)
 {
     display.clearDisplay();
 
@@ -48,8 +43,32 @@ void displayUpdate(
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0,0);
 
-    display.print("OBS:");
-    display.println(obs ? "OK" : "OFF");
+    display.println("WIFI OK");
+    display.println();
+    display.println("IP:");
+    display.println(ip);
+
+    display.display();
+}
+void displayUpdate(
+    const char* scene,
+    bool rec,
+    bool pause,
+    bool obs,
+    bool sourceMode)
+{
+    display.clearDisplay();
+
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0,0);
+
+   display.print("OBS:");
+display.print(obs ? "OK" : "OFF");
+
+display.print("  ");
+
+display.println(sourceMode ? "SRC" : "SCN");
 
     display.println();
 
@@ -63,9 +82,11 @@ void displayUpdate(
 
     display.print("PAUSE:");
     display.println(pause ? "ON" : "OFF");
-    display.setCursor(65,55);
+   
 
-    display.print("Ver:");
+    display.setCursor(70,55);
+
+    display.print("V:");
     display.println(FW_VERSION_STRING);
     display.display();
 }
