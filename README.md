@@ -8,6 +8,7 @@ cambiare da pagina web
 
 4- prossimamente aggiungerò anche gli stl
 compilate e buon uso qui ho aggiunto anche lo schema, se trovate qualche bug, e ve ne sono segnalatemelo
+
 video:https://youtu.be/Y0zFz0PQtGw
 <img width="583" height="425" alt="immagine" src="https://github.com/user-attachments/assets/760b0ba4-9f72-4243-b7ea-b255ba45ec18" />
 
