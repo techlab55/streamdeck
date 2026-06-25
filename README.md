@@ -5,7 +5,8 @@ rinominatelo in secrets.h
 cambiare da pagina web
 
 3- prossimamente aggiungerò anche gli stl
+4- ws2812 collegato al pin gpio10 
 compilate e buon uso qui ho aggiunto anche lo schema, se trovate qualche bug, e ve ne sono segnalatemelo
 video:https://youtu.be/Y0zFz0PQtGw
 <img width="583" height="425" alt="immagine" src="https://github.com/user-attachments/assets/760b0ba4-9f72-4243-b7ea-b255ba45ec18" />
-4- ws2812 collegato al pin gpio10 
+
