@@ -7,6 +7,8 @@
 #include "matrix.h"
 #include "version.h"
 #include <WiFi.h>
+#include <led_status.h>
+
 unsigned long showIpUntil = 0;
 void setup()
 {
@@ -23,7 +25,7 @@ delay(1000);
 
     obsBegin();
     webConfigBegin();
-
+ledBegin();
 }
 void loop()
 {
@@ -44,7 +46,9 @@ else
     matrixUpdate();
 obsLoop();
 
-
+ledUpdate(
+    isRecording(),
+    isRecordPaused());
 
     static unsigned long t = 0;
 
