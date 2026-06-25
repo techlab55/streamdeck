@@ -1,7 +1,6 @@
    // #define audioInput "lav"
-
-    #define OBS_IP   "xxx.xxx.xxx.xxx"
-    #define SCENE1 "scena1"
+   #define OBS_IP   "xxx.xxx.xxx.xxx" 
+   #define SCENE1 "scena1"
     #define SCENE2 "scena2"
     #define SCENE3 "scena3"
     #define SCENE4 "scena4"

@@ -2,7 +2,7 @@
 #include "obs_client.h"
 #include "settings.h"
 static bool sourceMode = false;
-
+static bool keyHandled[3][3];
 static const uint8_t rows[3] = {0, 1, 2};
 static const uint8_t cols[3] = {3, 4, 5};
 
@@ -22,6 +22,7 @@ void executeKey(uint8_t key)
                 sceneCamera1();
                   else
                 toggleSource(config.sourceKey1);
+                //Serial.printf("SOURCE %d\n", config.sourceKey1);
             break;
 
         case 2:
@@ -80,6 +81,7 @@ void executeKey(uint8_t key)
 }
 void matrixBegin()
 {
+    memset(keyHandled, 0, sizeof(keyHandled));
     for(int r=0; r<3; r++)
     {
         pinMode(rows[r], OUTPUT);
@@ -111,22 +113,34 @@ void matrixUpdate()
         {
             bool pressed =
                 (digitalRead(cols[c]) == LOW);
-
-            if(pressed != lastState[r][c])
-            {
-                lastTime[r][c] = millis();
-                lastState[r][c] = pressed;
-            }
-if(pressed &&
-   millis() - lastTime[r][c] == DEBOUNCE_MS)
+                if(pressed)
 {
-    
-
-    executeKey(r * 3 + c + 1);
+    Serial.printf("R=%d C=%d\n", r, c);
 }
-            
-        }
 
-        digitalWrite(rows[r], HIGH);
+if(pressed != lastState[r][c])
+{
+    lastTime[r][c] = millis();
+    lastState[r][c] = pressed;
+
+    if(!pressed)
+    {
+        
+        // il tasto è stato rilasciato,
+        // quindi può essere premuto di nuovo
+        keyHandled[r][c] = false;
     }
+}
+
+
+if(pressed &&
+   !keyHandled[r][c] &&
+   millis() - lastTime[r][c] >= DEBOUNCE_MS)
+{
+    executeKey(r * 3 + c + 1);
+    keyHandled[r][c] = true;
+}
+}
+      digitalWrite(rows[r], HIGH);
+}
 }

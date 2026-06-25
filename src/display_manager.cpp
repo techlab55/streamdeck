@@ -68,7 +68,7 @@ display.print(obs ? "OK" : "OFF");
 
 display.print("  ");
 
-display.println(sourceMode ? "SRC" : "SCN");
+display.println(sourceMode ? "SOURCE" : "SCENE");
 
     display.println();
 
