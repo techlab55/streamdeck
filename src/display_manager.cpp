@@ -2,7 +2,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "version.h"
-
+#include "settings.h"
+#include "obs_client.h"
 
 static Adafruit_SSD1306 display(
     128,
@@ -47,7 +48,8 @@ void displayShowIP(const char* ip)
     display.println();
     display.println("IP:");
     display.println(ip);
-
+    display.println("OBS: ");
+display.println(config.obsIP);
     display.display();
 }
 void displayUpdate(
@@ -71,16 +73,19 @@ display.print("  ");
 display.println(sourceMode ? "SOURCE" : "SCENE");
 
     display.println();
+display.print(sourceMode ? "SRC:" : "SCN:");
 
-    display.print("SCENA:");
-    display.println(scene);//sceneName
+if(sourceMode)
+    display.println(getCurrentSource());
+else
+    display.println(scene);
 
     display.println();
 
     display.print("REC:");
-    display.println(rec ? "ON" : "OFF");
+    display.print(rec ? "ON" : "OFF");
 
-    display.print("PAUSE:");
+    display.print("  PAUSE:");
     display.println(pause ? "ON" : "OFF");
    
 

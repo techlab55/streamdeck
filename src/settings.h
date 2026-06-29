@@ -2,35 +2,35 @@
 
 #include <Arduino.h>
 
+// Numero di tasti fisici dello Stream Deck
+constexpr uint8_t NUM_KEYS = 6;
+
+
 struct AppConfig
 {
+    // WiFi
     String wifiSSID;
     String wifiPass;
 
+    // OBS
     String obsIP;
     uint16_t obsPort;
 
+    // Audio
     String audioInput;
 
-    String scene1;
-    String scene2;
-    String scene3;
-    String scene4;
-    String scene5;
-    String scene6;
-
+    // Modalità Sources
     String sourceScene;
-    String sourceKey1;
-    String sourceKey2;
-    String sourceKey3;
-    String sourceKey4;
-    String sourceKey5;
-    String sourceKey6;
-   
+
+   // Azione associata ai 6 pulsanti
+    String scenes[NUM_KEYS];
+    String sourceKeys[NUM_KEYS];
 };
 
 extern AppConfig config;
+extern bool sourceMode;
 
+void printConfig();
 void loadSettings();
 void saveSettings();
 void loadDefaults();

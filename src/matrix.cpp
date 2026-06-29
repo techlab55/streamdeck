@@ -1,73 +1,49 @@
 #include <Arduino.h>
 #include "obs_client.h"
 #include "settings.h"
-static bool sourceMode = false;
+
 static bool keyHandled[3][3];
 static const uint8_t rows[3] = {0, 1, 2};
 static const uint8_t cols[3] = {3, 4, 5};
 
 static bool lastState[3][3];
 static uint32_t lastTime[3][3];
-
+bool sourceMode = false;
 const uint32_t DEBOUNCE_MS = 50;
 
 void executeKey(uint8_t key)
 {
-    Serial.printf("KEY %d\n", key);
+    if(key >= 1 && key <= NUM_KEYS)
+    {
+        uint8_t idx = key - 1;
+
+        if(sourceMode)
+        {
+            Serial.printf("KEY %d SOURCE -> %s\n",
+                          key,
+                          config.sourceKeys[idx].c_str());
+
+            toggleSource(config.sourceKeys[idx]);
+        }
+        else
+        {
+            Serial.printf("KEY %d SCENE -> %s\n",
+                          key,
+                          config.scenes[idx].c_str());
+
+            changeScene(config.scenes[idx]);
+        }
+
+        return;
+    }
 
     switch(key)
     {
-        case 1:
-            if(!sourceMode)
-                sceneCamera1();
-                  else
-                toggleSource(config.sourceKey1);
-                //Serial.printf("SOURCE %d\n", config.sourceKey1);
-            break;
-
-        case 2:
-            if(!sourceMode)
-                sceneCamera2();
-            else
-                toggleSource(config.sourceKey2);
-            break;
-
-        case 3:
-            if(!sourceMode)
-                sceneCamera3();
-            else
-                toggleSource(config.sourceKey3);
-            break;
-
-        case 4:
-            if(!sourceMode)
-                sceneArduino();
-            else
-                toggleSource(config.sourceKey4);
-            break;
-
-        case 5:
-            if(!sourceMode)
-                sceneSchermo();
-            else
-                toggleSource(config.sourceKey5);
-            break;
-
-        case 6:
-            if(!sourceMode)
-                sceneMicroscopio();
-            else
-                toggleSource(config.sourceKey6);
-            break;
-
         case 7:
             sourceMode = !sourceMode;
 
-            Serial.print("MODE=");
-            Serial.println(
-                sourceMode ?
-                "SOURCES" :
-                "SCENES");
+            Serial.println(sourceMode ? "MODE = SOURCES"
+                                      : "MODE = SCENES");
             break;
 
         case 8:
@@ -115,7 +91,7 @@ void matrixUpdate()
                 (digitalRead(cols[c]) == LOW);
                 if(pressed)
 {
-    Serial.printf("R=%d C=%d\n", r, c);
+    //Serial.printf("R=%d C=%d\n", r, c);
 }
 
 if(pressed != lastState[r][c])

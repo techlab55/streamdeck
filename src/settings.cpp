@@ -11,25 +11,19 @@ void loadDefaults()
 {
     config.wifiSSID = WIFI_SSID;
     config.wifiPass = WIFI_PASSWORD;
-   // config.obsIP = OBS_IP;
-   
-    config.sourceScene = SOURCE_SCENE;
-    config.obsPort = 4455;
-    
-    config.audioInput = "micv8s";
-    config.scene1 = SCENE1;
-    config.scene2 = SCENE2;
-    config.scene3 = SCENE3;
-    config.scene4 = SCENE4;
-    config.scene5 = SCENE5;
-    config.scene6 =  SCENE6;
-      config.sourceKey1 = SOURCE_KEY1;      
-      config.sourceKey2 = SOURCE_KEY2;
-    config.sourceKey3 = SOURCE_KEY3;
-    config.sourceKey4 = SOURCE_KEY4;
-    config.sourceKey5 = SOURCE_KEY5;
-    config.sourceKey6 = SOURCE_KEY6;
+
+    config.obsPort = OBS_PORT;
+
+    config.audioInput = DEFAULT_AUDIO;
+    config.sourceScene = DEFAULT_SOURCE_SCENE;
+
+    for(uint8_t i = 0; i < NUM_KEYS; i++)
+    {
+        config.scenes[i]     = DEFAULT_SCENES[i];
+        config.sourceKeys[i] = DEFAULT_SOURCES[i];
+    }
 }
+
 void saveObsIPOnly(const String& ip)
 {
     prefs.begin("streamdeck", false);
@@ -45,9 +39,9 @@ void saveObsIPOnly(const String& ip)
      delay(500);
     ESP.restart();
 }
+
 void saveSettings()
 {
-    delay(1000);
     prefs.begin("streamdeck", false);
 
     prefs.putString("ssid", config.wifiSSID);
@@ -57,117 +51,77 @@ void saveSettings()
     prefs.putUShort("obsport", config.obsPort);
 
     prefs.putString("audio", config.audioInput);
-    prefs.putString("scene1", config.scene1);
-    prefs.putString("scene2", config.scene2);
-    prefs.putString("scene3", config.scene3);
-    prefs.putString("scene4", config.scene4);
-    prefs.putString("scene5", config.scene5);
-    prefs.putString("scene6", config.scene6);
-prefs.putString(
-    "sourceKey1",
-    config.sourceKey1);
+    prefs.putString("sourceScene", config.sourceScene);
 
-prefs.putString(
-    "sourceKey2",
-    config.sourceKey2);
+    for (uint8_t i = 0; i < NUM_KEYS; i++)
+    {
+        prefs.putString(PREF_SCENES[i], config.scenes[i]);
+        prefs.putString(PREF_SOURCES[i], config.sourceKeys[i]);
+        
+    }
+Serial.println("=== VERIFICA SALVATAGGIO ===");
 
-prefs.putString(
-    "sourceKey3",
-    config.sourceKey3);
-
-prefs.putString(
-    "sourceKey4",
-    config.sourceKey4);
-
-prefs.putString(
-    "sourceKey5",
-    config.sourceKey5);
-
-prefs.putString(
-    "sourceKey6",
-    config.sourceKey6);
-
-prefs.putString(
-    "sourceScene",
-    config.sourceScene);
+for(uint8_t i=0;i<NUM_KEYS;i++)
+{
+    Serial.print(PREF_SOURCES[i]);
+    Serial.print(" -> ");
+    Serial.println(prefs.getString(PREF_SOURCES[i], "<vuoto>"));
+}
     prefs.end();
-   
 }
 
 void loadSettings()
 {
-     Serial.println(">>> SONO ENTRATO IN loadSettings()");
-
     prefs.begin("streamdeck", true);
-   
 
-    config.wifiSSID =
-        prefs.getString("ssid", "");
+    bool firstBoot = !prefs.isKey("obsip");
 
-    config.wifiPass =
-        prefs.getString("pass", "");
-bool firstBoot =
-        !prefs.isKey("obsip");
-    config.obsIP =
-        prefs.getString("obsip", "");
-
-    config.obsPort =
-        prefs.getUShort("obsport", 4455);
-
-    config.audioInput =
-        prefs.getString("audio", "lav");
-
-    config.scene1 =
-        prefs.getString("scene1", "camera1");
-
-    config.scene2 =
-        prefs.getString("scene2", "camera2");
-
-    config.scene3 =
-        prefs.getString("scene3", "camera3");
-
-    config.scene4 =
-        prefs.getString("scene4", "arduino");
-
-    config.scene5 =
-        prefs.getString("scene5", "schermo");
-
-    config.scene6 =
-        prefs.getString("scene6", "microscopio");
-
-        config.sourceKey1 =
-        prefs.getString("sourceKey1", "");
-
-    config.sourceKey2 =
-        prefs.getString("sourceKey2", "");
-
-    config.sourceKey3 =
-        prefs.getString("sourceKey3", "");
-
-    config.sourceKey4 =
-        prefs.getString("sourceKey4", "");
-
-    config.sourceKey5 =
-        prefs.getString("sourceKey5", "");
-
-    config.sourceKey6 =
-        prefs.getString("sourceKey6", "");
-
-    // MANCAVA
-    config.sourceScene =
-        prefs.getString("sourceScene", "");
-
-    prefs.end();
-     if(firstBoot)
+    if (firstBoot)
     {
-        Serial.println("PRIMO AVVIO");
-
+        prefs.end();
         loadDefaults();
-
-        // solo qui prendi il valore da secrets.h
-        config.obsIP = OBS_IP;
-
-        saveSettings();
+        return;
     }
 
+    config.wifiSSID = prefs.getString("ssid", WIFI_SSID);
+    config.wifiPass = prefs.getString("pass", WIFI_PASSWORD);
+
+    config.obsIP = prefs.getString("obsip", "");
+    config.obsPort = prefs.getUShort("obsport", OBS_PORT);
+
+    config.audioInput = prefs.getString("audio", "micv8s");
+   config.sourceScene = prefs.getString("sourceScene", "mix1");
+
+    for (uint8_t i = 0; i < NUM_KEYS; i++)
+    {
+       config.scenes[i] =
+    //prefs.getString(PREF_SCENES[i], "");
+    prefs.getString(PREF_SCENES[i], DEFAULT_SCENES[i]);
+        config.sourceKeys[i] =
+    //prefs.getString(PREF_SOURCES[i], "");
+    prefs.getString(PREF_SOURCES[i], DEFAULT_SOURCES[i]);
+    }
+
+    prefs.end();
+}
+void printConfig()
+{
+    Serial.println("\n===== CONFIG =====");
+
+    Serial.println("WiFi : " + config.wifiSSID);
+    Serial.println("OBS  : " + config.obsIP);
+    Serial.println("Port : " + String(config.obsPort));
+
+    for (uint8_t i = 0; i < NUM_KEYS; i++)
+    {
+        Serial.printf("Key %d Scene  : %s\n",
+                      i + 1,
+                      config.scenes[i].c_str());
+
+        Serial.printf("Key %d Source : %s\n",
+                      i + 1,
+                      config.sourceKeys[i].c_str());
+    }
+
+    Serial.println("==================");
 }

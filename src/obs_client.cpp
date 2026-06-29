@@ -6,7 +6,23 @@
 #include "settings.h"
 #include "web_config.h"
 #include "display_manager.h"
-void loadDefaults();
+static JsonObject makeRequest(
+    JsonDocument& doc,
+    const char* requestType,
+    const char* requestId)
+{
+    doc["op"] = 6;
+
+    JsonObject d = doc["d"].to<JsonObject>();
+
+    d["requestType"] = requestType;
+    d["requestId"] = requestId;
+
+    return d["requestData"].to<JsonObject>();
+}
+
+
+
 static String sourceToToggle = "";
 
 using namespace websockets;
@@ -20,7 +36,8 @@ String obsScenes[32];
 int obsSceneCount = 0;
 String sceneSources[32];
 int sceneSourceCount = 0;
-
+static String currentSource = "";
+void loadDefaults();
 static void sendIdentify()
 {
     JsonDocument doc;
@@ -41,7 +58,7 @@ static void sendIdentify()
 void toggleSource(String sourceName)
 {
     sourceToToggle = sourceName;
-
+currentSource = sourceName;
     JsonDocument doc;
 
     doc["op"] = 6;
@@ -64,52 +81,41 @@ void toggleSource(String sourceName)
 
    
 }
-static void changeScene(const char* sceneName)
+void changeScene(const String& sceneName)
 {
-    if(!obsReady)
-        return;
+     currentScene = sceneName;
+   JsonDocument doc;
 
-    JsonDocument doc;
+JsonObject req =
+    makeRequest(
+        doc,
+        "SetCurrentProgramScene",
+        "scene");
 
-    doc["op"] = 6;
+req["sceneName"] = sceneName;
 
-    JsonObject d = doc["d"].to<JsonObject>();
+String payload;
+serializeJson(doc, payload);
 
-    d["requestType"] = "SetCurrentProgramScene";
-    d["requestId"] = "scene";
-
-    JsonObject requestData =
-        d["requestData"].to<JsonObject>();
-
-    requestData["sceneName"] = sceneName;
-
-    String payload;
-    serializeJson(doc, payload);
-
-    client.send(payload);
-
-    Serial.print("Cambio scena -> ");
-    Serial.println(sceneName);
+client.send(payload);
 }
 void requestSceneList()
 {
-    JsonDocument doc;
+ JsonDocument doc;
 
-    doc["op"] = 6;
+makeRequest(
+    doc,
+    "GetSceneList",
+    "scenelist");
 
-    JsonObject d =
-        doc["d"].to<JsonObject>();
+String payload;
+serializeJson(doc, payload);
 
-    d["requestType"] = "GetSceneList";
-    d["requestId"] = "scenelist";
+client.send(payload);
 
-    String payload;
-    serializeJson(doc, payload);
-
-    client.send(payload);
-
-    Serial.println("Richiesta SceneList");
+Serial.println("Richiesta SceneList");
 }
+/*
 void requestSceneItems(String sceneName)
 {
     JsonDocument doc;
@@ -134,8 +140,24 @@ void requestSceneItems(String sceneName)
 
     Serial.print("Richiesta fonti di ");
     Serial.println(sceneName);
-}
+}*/
+void requestSceneItems(const String& scene)
+{
+    JsonDocument doc;
 
+    JsonObject req =
+        makeRequest(
+            doc,
+            "GetSceneItemList",
+            "sourcelist");
+
+    req["sceneName"] = scene;
+
+    String payload;
+    serializeJson(doc, payload);
+
+    client.send(payload);
+}
 void onMessage(WebsocketsMessage message)
 {
 
@@ -180,14 +202,15 @@ requestSceneItems("mix1");
 
 
 
-    if (op == 5)
-    {
-        const char* eventType =
-            doc["d"]["eventType"];
-
-        if(strcmp(eventType, "RecordStateChanged") == 0)
+    if(op == 5)
 {
-    const char* state =
+    const char* eventType =
+        doc["d"]["eventType"];
+
+    if(strcmp(eventType,
+              "RecordStateChanged") == 0)
+    {
+            const char* state =
         doc["d"]["eventData"]["outputState"];
 
     Serial.print("STATE=");
@@ -221,14 +244,13 @@ requestSceneItems("mix1");
         recording,
         recordPaused);
 
-}
+
         }// Evento: scena cambiata (da OBS o da noi)
-if (op == 5)
-{
-    const char* eventType = doc["d"]["eventType"];
-    if (strcmp(eventType, "CurrentProgramSceneChanged") == 0)
+//if (op == 5)
+      else if(strcmp(eventType,
+                   "CurrentProgramSceneChanged") == 0)
     {
-        const char* name = doc["d"]["eventData"]["sceneName"];
+          const char* name = doc["d"]["eventData"]["sceneName"];
         if (name) {
             currentScene = name;
             Serial.print("SCENA -> ");
@@ -276,7 +298,7 @@ if(op == 7)
     // CURRENT SCENE
     // =====================
 
-    if(requestId == "getScene")
+   else if(requestId == "getScene")
     {
         const char* name =
             doc["d"]["responseData"]
@@ -290,7 +312,7 @@ if(op == 7)
             Serial.println(currentScene);
         }
     }
-if(requestId == "sourcelist")
+else if(requestId == "sourcelist")
 {
     sceneSourceCount = 0;
 
@@ -317,7 +339,7 @@ if(requestId == "sourcelist")
     // TOGGLE SOURCE
     // =====================
 
-    if(requestId == "items")
+    else if(requestId == "items")
     {
         JsonArray sceneItems =
             doc["d"]["responseData"]["sceneItems"];
@@ -380,7 +402,7 @@ WiFi.begin(
     config.wifiSSID.c_str(),
     config.wifiPass.c_str());
   
-   loadDefaults();
+   //loadDefaults();
   int tentativi = 0;
   const int max_tentativi = 50; // Numero massimo di tentativi (circa 10 secondi)
 
@@ -436,48 +458,14 @@ void obsLoop()
     client.poll();
 }
 
-void sceneCamera1()
-{
-    Serial.println("BTN CAMERA1");
-    
-    changeScene(config.scene1.c_str());
-}
 
-void sceneCamera2()
+void keyPressed(uint8_t key)
 {
-    Serial.println("BTN CAMERA2");
-    
-    changeScene(config.scene2.c_str());
+    if(sourceMode)
+        toggleSource(config.sourceKeys[key]);
+    else
+        changeScene(config.scenes[key].c_str());
 }
-
-void sceneCamera3()
-{
-    Serial.println("BTN CAMERA3");  
-    
-    changeScene(config.scene3.c_str());
-}
-
-void sceneArduino()
-{
-    Serial.println("BTN ARDUINO");
-    
-    changeScene(config.scene4.c_str());
-}
-
-void sceneSchermo()
-{
-    Serial.println("BTN SCHERMO");
-   
-    changeScene(config.scene5.c_str());
-}
-
-void sceneMicroscopio()
-{
-    Serial.println("BTN MICROSCOPIO");
-    
-    changeScene(config.scene6.c_str());
-}
-
 void toggleMute()
 {
     JsonDocument doc;
@@ -545,9 +533,15 @@ void toggleStreaming()
     Serial.println("Streaming");
 }
 const char* getCurrentScene()
+
 {
     return currentScene.c_str();
 }
+const char* getCurrentSource()
+{
+    return currentSource.c_str();
+}
+
 
 bool isObsConnected()
 {
